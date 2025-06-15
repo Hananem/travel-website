@@ -6,7 +6,9 @@ const cors = require('cors');
 const multer = require('multer');
 const itemRoutes = require('./routes/itemRoutes');
 const authRoutes = require("./routes/authRoutes");
-
+const bookingRoutes = require('./routes/bookingRoutes');
+const guideRoutes = require('./routes/guideRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 // Add debug code here to check if .env is loaded
 console.log('=== DEBUG: Environment Variables ===');
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
@@ -21,11 +23,13 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true })); 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use('/api/items', itemRoutes);
-
+app.use('/api/bookings', bookingRoutes)
+app.use('/api/guides', guideRoutes);
+app.use('/api/categories', categoryRoutes);
 // Error handling middleware
 // Add this multer error handling middleware
 app.use((error, req, res, next) => {

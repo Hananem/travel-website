@@ -5,9 +5,11 @@ export const authSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:4000/api/',
     prepareHeaders: (headers, { getState }) => {
-      const token = getState().user?.token;
+      // Try to get token from localStorage first, then from Redux state
+      const token = localStorage.getItem('token') || getState().auth?.token;
+      
       if (token) {
-        headers.set('Authorization', token); // No 'Bearer' prefix based on your preference
+        headers.set('Authorization', token);
       }
       headers.set('Content-Type', 'application/json');
       return headers;
@@ -21,6 +23,12 @@ export const authSlice = createApi({
         method: 'POST',
         body: userData,
       }),
+      transformResponse: (response) => {
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
+        return response;
+      }
     }),
 
     login: builder.mutation({
@@ -29,6 +37,12 @@ export const authSlice = createApi({
         method: 'POST',
         body: credentials,
       }),
+      transformResponse: (response) => {
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+        }
+        return response;
+      }
     }),
 
     getMe: builder.query({
@@ -41,6 +55,10 @@ export const authSlice = createApi({
         url: 'auth/logout',
         method: 'POST',
       }),
+      transformResponse: (response) => {
+        localStorage.removeItem('token');
+        return response;
+      },
       invalidatesTags: ['Auth'],
     }),
 
@@ -48,10 +66,9 @@ export const authSlice = createApi({
       query: (email) => ({
         url: 'auth/forgot-password',
         method: 'POST',
-        body: { email }, // Ensure email is a string
+        body: { email },
       }),
     }),
-
 
     resetPassword: builder.mutation({
       query: ({ token, newPassword }) => ({

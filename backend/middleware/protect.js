@@ -3,24 +3,17 @@ const User = require("../models/User");
 
 const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-
-  // Check for token in header
   if (!authHeader) {
     return res.status(401).json({ message: "Authorization token missing" });
   }
 
   const token = authHeader;
-
   try {
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Attach user to request (excluding password)
     const user = await User.findById(decoded.id).select("-password");
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-
     req.user = user;
     next();
   } catch (err) {
@@ -29,4 +22,15 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = protect;
+const isAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+};
+
+module.exports = { protect, isAdmin };
+

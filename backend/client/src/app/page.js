@@ -8,13 +8,18 @@ import {
   useUpdateItemMutation 
 } from '@/store/apiSlice';
 import { useRouter } from 'next/navigation';
-import Component from "@/components/Component"
-import CountrySliderWithText from "@/components/CountrySliderWithText"
+import Component from "@/components/Component";
+import CountrySliderWithText from "@/components/CountrySliderWithText";
+import { Star, Clock, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import BookingForm from '@/components/BookingForm'; 
+
 export default function ItemsList() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  
+  const router = useRouter();
   // Filter state
   const [filters, setFilters] = useState({
     category: '',
@@ -33,6 +38,10 @@ export default function ItemsList() {
   
   // Query selection
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
+
+  // Booking modal state
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Get the appropriate query based on filter mode
   const basicQuery = useGetItemsQuery({
@@ -54,11 +63,10 @@ export default function ItemsList() {
 
   console.log("Fetched data:", data);  
 
-  // Modal states
+  // Modal states for delete and update
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [updatedData, setUpdatedData] = useState({
+  const [updateData, setUpdatedData] = useState({
     name: '',
     description: '',
     destination: '',
@@ -72,7 +80,6 @@ export default function ItemsList() {
 
   const [deleteItem] = useDeleteItemMutation();
   const [updateItem] = useUpdateItemMutation();
-  const router = useRouter();
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -123,6 +130,11 @@ export default function ItemsList() {
     setUpdateModalOpen(true);
   };
 
+  const handleBookingClick = (item) => {
+    setSelectedItem(item);
+    setBookingModalOpen(true);
+  };
+
   const confirmDelete = async () => {
     try {
       await deleteItem(selectedItem._id).unwrap();
@@ -138,7 +150,7 @@ export default function ItemsList() {
     try {
       await updateItem({
         id: selectedItem._id,
-        ...updatedData
+        ...updateData
       }).unwrap();
       setUpdateModalOpen(false);
       refetch();
@@ -161,31 +173,30 @@ export default function ItemsList() {
 
   return (
     <div className="">
-       <div
-      className="relative min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/bg.png')" }}
-    >
-      {/* Navbar is already fixed and rendered in RootLayout */}
-     <section className="h-screen flex items-center justify-center text-white text-center bg-black/40 backdrop-brightness-50">
-  <div>
-    <h1 className="text-5xl md:text-6xl font-extrabold drop-shadow-md">
-      Discover Your Next Adventure
-    </h1>
-    <p className="mt-6 text-xl md:text-2xl max-w-xl mx-auto drop-shadow">
-      Explore breathtaking destinations, unforgettable journeys, and create memories that last a lifetime.
-    </p>
-    <div className="mt-8">
-      <button className="px-6 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition">
-        Start Exploring
-      </button>
-    </div>
-  </div>
-</section>
+      <div
+        className="relative min-h-screen bg-cover bg-center"
+        style={{ backgroundImage: "url('/bg.png')" }}
+      >
+        {/* Navbar is already fixed and rendered in RootLayout */}
+        <section className="h-screen flex items-center justify-center text-white text-center bg-black/40 backdrop-brightness-50">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-extrabold drop-shadow-md">
+              Discover Your Next Adventure
+            </h1>
+            <p className="mt-6 text-xl md:text-2xl max-w-xl mx-auto drop-shadow">
+              Explore breathtaking destinations, unforgettable journeys, and create memories that last a lifetime.
+            </p>
+            <div className="mt-8">
+              <button className="px-6 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition">
+                Start Exploring
+              </button>
+            </div>
+          </div>
+        </section>
 
-<Component />
-<CountrySliderWithText />
-
-    </div>
+        <Component />
+        <CountrySliderWithText />
+      </div>
       {/* Filter Section */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -411,7 +422,7 @@ export default function ItemsList() {
                 <input
                   type="text"
                   name="name"
-                  value={updatedData.name}
+                  value={updateData.name}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
                   required
@@ -422,7 +433,7 @@ export default function ItemsList() {
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <textarea
                   name="description"
-                  value={updatedData.description}
+                  value={updateData.description}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
                   rows={3}
@@ -434,7 +445,7 @@ export default function ItemsList() {
                 <input
                   type="text"
                   name="destination"
-                  value={updatedData.destination}
+                  value={updateData.destination}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
                   required
@@ -448,7 +459,7 @@ export default function ItemsList() {
                     type="number"
                     name="duration"
                     min="1"
-                    value={updatedData.duration}
+                    value={updateData.duration}
                     onChange={handleUpdateChange}
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -461,7 +472,7 @@ export default function ItemsList() {
                     name="price"
                     min="0"
                     step="0.01"
-                    value={updatedData.price}
+                    value={updateData.price}
                     onChange={handleUpdateChange}
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -473,7 +484,7 @@ export default function ItemsList() {
                 <input
                   type="text"
                   name="category"
-                  value={updatedData.category}
+                  value={updateData.category}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="Tour, Gear, Experience..."
@@ -487,7 +498,7 @@ export default function ItemsList() {
                     type="number"
                     name="availableSpots"
                     min="0"
-                    value={updatedData.availableSpots}
+                    value={updateData.availableSpots}
                     onChange={handleUpdateChange}
                     className="w-full px-3 py-2 border rounded-md"
                   />
@@ -497,7 +508,7 @@ export default function ItemsList() {
                   <input
                     type="checkbox"
                     name="isAvailable"
-                    checked={updatedData.isAvailable}
+                    checked={updateData.isAvailable}
                     onChange={handleUpdateChange}
                     className="h-5 w-5"
                   />
@@ -510,7 +521,7 @@ export default function ItemsList() {
                 <input
                   type="text"
                   name="imageUrl"
-                  value={updatedData.imageUrl}
+                  value={updateData.imageUrl}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder="https://example.com/image.jpg"
@@ -537,134 +548,145 @@ export default function ItemsList() {
         </div>
       )}
 
-      {/* Items List */}
-  {data?.items?.length > 0 ? (
-  <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-    {data.items.map(item => (
-      <div key={item._id} className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200">
-        {/* Image Section */}
-        <div className="relative h-48 w-full overflow-hidden">
-          {item.imageUrl ? (
-            <img 
-              src={item.imageUrl} 
-              alt={item.name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => {
-                e.target.src = '/path/to/fallback-image.jpg';
-                e.target.onerror = null;
-              }}
+      {/* Booking Modal */}
+      {bookingModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Book {selectedItem?.name}</h2>
+            <BookingForm
+              itemId={selectedItem?._id}
+              itemPrice={selectedItem?.price}
+              itemName={selectedItem?.name}
             />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-sm text-gray-500">No image</p>
-              </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setBookingModalOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md"
+              >
+                Close
+              </button>
             </div>
-          )}
-          
-          {/* Status Badge */}
-          <div className="absolute top-3 right-3">
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              item.isAvailable 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {item.isAvailable ? 'Available' : 'Unavailable'}
-            </span>
           </div>
         </div>
+      )}
 
-        {/* Content Section */}
-        <div className="p-6 space-y-4">
-          {/* Header */}
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-              {item.name}
-            </h3>
-            <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-              {item.description}
-            </p>
-          </div>
-        
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Destination</p>
-                  <p className="text-sm font-medium text-gray-900">{item.destination}</p>
+      {/* Items List */}
+      {data?.items?.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {data.items.map((item) => (
+            <Card key={item._id} className="group overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
+              {/* Image Section */}
+              <div className="relative overflow-hidden">
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      e.target.src = '/path/to/fallback-image.jpg';
+                      e.target.onerror = null;
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-gray-500">No image</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Status Badge */}
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
+                  <span className={`text-sm font-semibold ${
+                    item.isAvailable ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {item.isAvailable ? 'Available' : 'Unavailable'}
+                  </span>
+                </div>
+                
+                {/* Price Badge */}
+                <div className="absolute bottom-4 left-4 bg-sky-500 text-white px-4 py-2 rounded-full font-bold text-lg">
+                  ${item.price.toFixed(2)}
                 </div>
               </div>
-            
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Duration</p>
-                  <p className="text-sm font-medium text-gray-900">{item.duration} days</p>
+
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xl font-bold text-gray-900">{item.name}</h3>
+                  <div className="flex items-center space-x-1 text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm">{item.duration} days</span>
+                  </div>
                 </div>
-              </div>
-            </div>
-          
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Price</p>
-                  <p className="text-lg font-bold text-green-600">${item.price.toFixed(2)}</p>
+
+                <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
+                  {item.description}
+                </p>
+
+                <div className="mb-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Details:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
+                      {item.destination}
+                    </span>
+                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
+                      {item.availableSpots} spots
+                    </span>
+                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
+                      {item.category}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Available</p>
-                  <p className="text-sm font-medium text-gray-900">{item.availableSpots} spots</p>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1 text-gray-500">
+                    <Users className="h-4 w-4" />
+                    <span className="text-sm">ID: {item._id.slice(-6)}</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={() => handleUpdateClick(item)}
+                      variant="outline"
+                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                    >
+                      Update
+                    </Button>
+                    <Button 
+                      onClick={() => handleDeleteClick(item)}
+                      variant="outline"
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                    >
+                      Delete
+                    </Button>
+                    <Button 
+                      onClick={() => handleBookingClick(item)}
+                      variant="outline"
+                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+                      disabled={!item.isAvailable}
+                    >
+                      Book Now
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        
-          {/* Category Tag */}
-          <div className="pt-2">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors duration-200">
-              {item.category}
-            </span>
-          </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        
-        {/* Action Buttons */}
-        <div className="px-6 pb-6 flex space-x-3">
-          <button
-            onClick={() => handleUpdateClick(item)}
-            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transform hover:scale-[1.02] transition-all duration-200 shadow-sm hover:shadow-md"
+      ) : (
+        <div className="text-center py-12 border rounded-lg bg-white shadow-sm">
+          <p className="text-gray-500 text-lg mb-4">No items found matching your filters</p>
+          <Button 
+            onClick={handleResetFilters}
+            variant="outline"
+            className="px-8 py-3 text-lg border-sky-500 text-sky-500 hover:bg-sky-500 hover:text-white"
           >
-            Update
-          </button>
-          <button
-            onClick={() => handleDeleteClick(item)}
-            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-lg hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            Delete
-          </button>
+            Reset Filters
+          </Button>
         </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-12 border rounded-lg bg-gray-50">
-    <p className="text-gray-500">No items found matching your filters</p>
-    <button
-      onClick={handleResetFilters}
-      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-    >
-      Reset Filters
-    </button>
-  </div>
-)}
+      )}
 
       {/* Bottom Pagination */}
       {data?.pagination?.totalPages > 1 && (

@@ -17,7 +17,15 @@ const categorySchema = new mongoose.Schema({
     default: '' // Stores Cloudinary image URL
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true } // Enable virtuals for toJSON
+});
+
+// Optional: Virtual to get all items in this category
+categorySchema.virtual('items', {
+  ref: 'Item', // Reference to the Item model
+  localField: '_id', // The field in Category
+  foreignField: 'category' // The field in Item that references Category
 });
 
 module.exports = mongoose.model('Category', categorySchema);

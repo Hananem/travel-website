@@ -27,9 +27,9 @@ const itemSchema = new mongoose.Schema({
     min: 0
   },
   category: {
-    type: String,
-    default: 'Tour', // e.g. "Tour", "Gear", "Experience"
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category', // Reference to the Category model
+    required: true // Make it required to ensure every item has a category
   },
   availableSpots: {
     type: Number,
@@ -49,4 +49,3 @@ const itemSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Item', itemSchema);
-

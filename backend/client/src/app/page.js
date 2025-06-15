@@ -10,10 +10,12 @@ import {
 import { useRouter } from 'next/navigation';
 import Component from "@/components/Component";
 import CountrySliderWithText from "@/components/CountrySliderWithText";
-import { Star, Clock, Users } from 'lucide-react';
+import { Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import BookingForm from '@/components/BookingForm'; 
+import Categories from '@/components/Categories'; 
+import CreateCategory from '@/components/CreateCategory'; 
 
 export default function ItemsList() {
   // Pagination state
@@ -34,9 +36,6 @@ export default function ItemsList() {
   });
   
   // Advanced filters toggle
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  
-  // Query selection
   const [useAdvancedFilters, setUseAdvancedFilters] = useState(false);
 
   // Booking modal state
@@ -58,8 +57,7 @@ export default function ItemsList() {
     ...filters
   });
 
-  const { data, isLoading, error, refetch } = 
-    useAdvancedFilters ? advancedQuery : basicQuery;
+  const { data, isLoading, error, refetch } = useAdvancedFilters ? advancedQuery : basicQuery;
 
   console.log("Fetched data:", data);  
 
@@ -72,7 +70,7 @@ export default function ItemsList() {
     destination: '',
     duration: 1,
     price: 0,
-    category: 'Tour',
+    category: '',
     availableSpots: 0,
     isAvailable: true,
     imageUrl: ''
@@ -122,7 +120,7 @@ export default function ItemsList() {
       destination: item.destination || '',
       duration: item.duration || 1,
       price: item.price || 0,
-      category: item.category || 'Tour',
+      category: item.category?._id || item.category || '', // Use category ID
       availableSpots: item.availableSpots || 0,
       isAvailable: item.isAvailable !== undefined ? item.isAvailable : true,
       imageUrl: item.imageUrl || ''
@@ -169,7 +167,14 @@ export default function ItemsList() {
   };
 
   if (isLoading) return <p className="text-center py-8">Loading...</p>;
-  if (error) return <p className="text-center py-8 text-red-500">Error loading data</p>;
+  if (error) return (
+    <div className="text-center py-8 text-red-500">
+      Error: {error.data?.error || error.message || 'Unknown error'}
+      <Button onClick={refetch} variant="outline" className="mt-4">Retry</Button>
+    </div>
+  );
+
+  const itemsArray = Array.isArray(data?.items) ? data?.items : data?.items ? [data.items] : [];
 
   return (
     <div className="">
@@ -177,7 +182,6 @@ export default function ItemsList() {
         className="relative min-h-screen bg-cover bg-center"
         style={{ backgroundImage: "url('/bg.png')" }}
       >
-        {/* Navbar is already fixed and rendered in RootLayout */}
         <section className="h-screen flex items-center justify-center text-white text-center bg-black/40 backdrop-brightness-50">
           <div>
             <h1 className="text-5xl md:text-6xl font-extrabold drop-shadow-md">
@@ -197,6 +201,8 @@ export default function ItemsList() {
         <Component />
         <CountrySliderWithText />
       </div>
+      <Categories />
+      <CreateCategory />
       {/* Filter Section */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex justify-between items-center mb-4">
@@ -217,7 +223,6 @@ export default function ItemsList() {
           </div>
         </div>
 
-        {/* Basic Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Category</label>
@@ -256,91 +261,88 @@ export default function ItemsList() {
           </div>
         </div>
 
-        {/* Advanced Filters */}
         {useAdvancedFilters && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Min Price</label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  value={filters.minPrice}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="$0.00"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Max Price</label>
-                <input
-                  type="number"
-                  name="maxPrice"
-                  value={filters.maxPrice}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="$1000.00"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Min Duration (days)</label>
-                <input
-                  type="number"
-                  name="minDuration"
-                  value={filters.minDuration}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="1"
-                  min="1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Max Duration (days)</label>
-                <input
-                  type="number"
-                  name="maxDuration"
-                  value={filters.maxDuration}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="30"
-                  min="1"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-1">Search</label>
-                <input
-                  type="text"
-                  name="search"
-                  value={filters.search}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Search by name or description"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Sort By</label>
-                <select
-                  name="sortBy"
-                  value={filters.sortBy}
-                  onChange={handleFilterChange}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  <option value="createdAt:desc">Newest First</option>
-                  <option value="createdAt:asc">Oldest First</option>
-                  <option value="price:asc">Price: Low to High</option>
-                  <option value="price:desc">Price: High to Low</option>
-                  <option value="duration:asc">Duration: Short to Long</option>
-                  <option value="duration:desc">Duration: Long to Short</option>
-                  <option value="name:asc">Name: A-Z</option>
-                  <option value="name:desc">Name: Z-A</option>
-                </select>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Min Price</label>
+              <input
+                type="number"
+                name="minPrice"
+                value={filters.minPrice}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="$0.00"
+                min="0"
+                step="0.01"
+              />
             </div>
-          </>
+            <div>
+              <label className="block text-sm font-medium mb-1">Max Price</label>
+              <input
+                type="number"
+                name="maxPrice"
+                value={filters.maxPrice}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="$1000.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Min Duration (days)</label>
+              <input
+                type="number"
+                name="minDuration"
+                value={filters.minDuration}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="1"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Max Duration (days)</label>
+              <input
+                type="number"
+                name="maxDuration"
+                value={filters.maxDuration}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="30"
+                min="1"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium mb-1">Search</label>
+              <input
+                type="text"
+                name="search"
+                value={filters.search}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="Search by name or description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Sort By</label>
+              <select
+                name="sortBy"
+                value={filters.sortBy}
+                onChange={handleFilterChange}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="createdAt:desc">Newest First</option>
+                <option value="createdAt:asc">Oldest First</option>
+                <option value="price:asc">Price: Low to High</option>
+                <option value="price:desc">Price: High to Low</option>
+                <option value="duration:asc">Duration: Short to Long</option>
+                <option value="duration:desc">Duration: Long to Short</option>
+                <option value="name:asc">Name: A-Z</option>
+                <option value="name:desc">Name: Z-A</option>
+              </select>
+            </div>
+          </div>
         )}
       </div>
 
@@ -348,7 +350,7 @@ export default function ItemsList() {
       <div className="flex justify-between items-center mb-4">
         <div>
           <span className="text-sm text-gray-600">
-            Showing {data?.items?.length || 0} of {data?.pagination?.totalItems || 0} items
+            Showing {itemsArray.length} of {data?.pagination?.totalItems || 0} items
           </span>
         </div>
         <div className="flex items-center space-x-4">
@@ -428,7 +430,6 @@ export default function ItemsList() {
                   required
                 />
               </div>
-
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Description</label>
                 <textarea
@@ -439,7 +440,6 @@ export default function ItemsList() {
                   rows={3}
                 />
               </div>
-
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Destination *</label>
                 <input
@@ -451,7 +451,6 @@ export default function ItemsList() {
                   required
                 />
               </div>
-
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Duration (days)</label>
@@ -464,7 +463,6 @@ export default function ItemsList() {
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium mb-1">Price</label>
                   <input
@@ -478,19 +476,17 @@ export default function ItemsList() {
                   />
                 </div>
               </div>
-
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Category</label>
+                <label className="block text-sm font-medium mb-1">Category ID</label>
                 <input
                   type="text"
                   name="category"
                   value={updateData.category}
                   onChange={handleUpdateChange}
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Tour, Gear, Experience..."
+                  placeholder="Enter category ID"
                 />
               </div>
-
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Available Spots</label>
@@ -503,7 +499,6 @@ export default function ItemsList() {
                     className="w-full px-3 py-2 border rounded-md"
                   />
                 </div>
-
                 <div className="flex items-center space-x-2 mt-6">
                   <input
                     type="checkbox"
@@ -515,7 +510,6 @@ export default function ItemsList() {
                   <label>Is Available</label>
                 </div>
               </div>
-
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Image URL</label>
                 <input
@@ -527,7 +521,6 @@ export default function ItemsList() {
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
-
               <div className="flex justify-end space-x-4">
                 <button
                   type="button"
@@ -571,11 +564,10 @@ export default function ItemsList() {
       )}
 
       {/* Items List */}
-      {data?.items?.length > 0 ? (
+      {itemsArray.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data.items.map((item) => (
+          {itemsArray.map((item) => (
             <Card key={item._id} className="group overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
-              {/* Image Section */}
               <div className="relative overflow-hidden">
                 {item.imageUrl ? (
                   <img
@@ -597,22 +589,15 @@ export default function ItemsList() {
                     </div>
                   </div>
                 )}
-                
-                {/* Status Badge */}
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
-                  <span className={`text-sm font-semibold ${
-                    item.isAvailable ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <span className={`text-sm font-semibold ${item.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
                     {item.isAvailable ? 'Available' : 'Unavailable'}
                   </span>
                 </div>
-                
-                {/* Price Badge */}
                 <div className="absolute bottom-4 left-4 bg-sky-500 text-white px-4 py-2 rounded-full font-bold text-lg">
                   ${item.price.toFixed(2)}
                 </div>
               </div>
-
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xl font-bold text-gray-900">{item.name}</h3>
@@ -621,11 +606,9 @@ export default function ItemsList() {
                     <span className="text-sm">{item.duration} days</span>
                   </div>
                 </div>
-
                 <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
                   {item.description}
                 </p>
-
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-900 mb-2">Details:</h4>
                   <div className="flex flex-wrap gap-2">
@@ -636,11 +619,10 @@ export default function ItemsList() {
                       {item.availableSpots} spots
                     </span>
                     <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
-                      {item.category}
+                      {item.category?.name || item.category || 'N/A'}
                     </span>
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1 text-gray-500">
                     <Users className="h-4 w-4" />
@@ -706,8 +688,6 @@ export default function ItemsList() {
             >
               Previous
             </button>
-            
-            {/* Page numbers */}
             {Array.from({ length: Math.min(5, data.pagination.totalPages) }, (_, i) => {
               let pageNum;
               if (data.pagination.totalPages <= 5) {
@@ -719,7 +699,6 @@ export default function ItemsList() {
               } else {
                 pageNum = page - 2 + i;
               }
-              
               return (
                 <button
                   key={pageNum}
@@ -730,7 +709,6 @@ export default function ItemsList() {
                 </button>
               );
             })}
-
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={page >= data.pagination.totalPages}

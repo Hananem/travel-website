@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -5,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { useAddItemMutation } from '@/store/apiSlice';
+import { useGetAllCategoriesQuery } from '@/store/categorySlice';
 
 export default function CreateItem() {
   const [addItem, { isLoading }] = useAddItemMutation();
+  const { data: categories, error: categoriesError, isLoading: isCategoriesLoading } = useGetAllCategoriesQuery();
   const router = useRouter();
   const fileInputRef = useRef(null);
 
@@ -17,7 +20,7 @@ export default function CreateItem() {
     destination: '',
     duration: 1,
     price: 0,
-    category: 'Tour',
+    categoryId: '', // Store category ObjectId
     availableSpots: 0,
     isAvailable: true,
     image: null,
@@ -67,25 +70,21 @@ export default function CreateItem() {
     e.preventDefault();
     setError('');
 
-    if (!formData.name.trim() || !formData.destination.trim()) {
-      setError('Name and Destination are required');
+    if (!formData.name.trim() || !formData.destination.trim() || !formData.categoryId) {
+      setError('Name, Destination, and Category are required');
       return;
     }
 
     try {
       const formPayload = new FormData();
-      
-      // Append all form fields
       formPayload.append('name', formData.name);
       formPayload.append('description', formData.description);
       formPayload.append('destination', formData.destination);
       formPayload.append('duration', formData.duration.toString());
       formPayload.append('price', formData.price.toString());
-      formPayload.append('category', formData.category);
+      formPayload.append('categoryId', formData.categoryId); // Send categoryId
       formPayload.append('availableSpots', formData.availableSpots.toString());
       formPayload.append('isAvailable', formData.isAvailable.toString());
-
-      // Append image file with correct field name
       if (formData.image) {
         formPayload.append('image', formData.image);
       }
@@ -116,6 +115,12 @@ export default function CreateItem() {
         {error && (
           <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {categoriesError && (
+          <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">
+            Failed to load categories: {categoriesError.data?.error || categoriesError.message}
           </div>
         )}
 
@@ -184,7 +189,7 @@ export default function CreateItem() {
             <input
               name="name"
               value={formData.name}
-              onChange={handleChange }
+              onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
               required
               placeholder="e.g., Bali Adventure Tour"
@@ -221,19 +226,28 @@ export default function CreateItem() {
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">
-              Category
+              Category *
             </label>
             <select
-              name="category"
-              value={formData.category}
+              name="categoryId"
+              value={formData.categoryId}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              required
+              disabled={isCategoriesLoading || categoriesError}
             >
-              <option value="Tour">Tour</option>
-              <option value="Adventure">Adventure</option>
-              <option value="Cultural">Cultural</option>
-              <option value="Beach">Beach</option>
-              <option value="Hiking">Hiking</option>
+              <option value="">Select a category</option>
+              {isCategoriesLoading ? (
+                <option disabled>Loading categories...</option>
+              ) : categories && categories.length > 0 ? (
+                categories.map(category => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No categories available</option>
+              )}
             </select>
           </div>
         </div>
@@ -303,9 +317,9 @@ export default function CreateItem() {
         <div className="pt-4">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isCategoriesLoading || categoriesError}
             className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors
-              ${isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+              ${isLoading || isCategoriesLoading || categoriesError ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
           >
             {isLoading ? (
               <span className="flex items-center justify-center">

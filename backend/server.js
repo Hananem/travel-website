@@ -6,6 +6,7 @@ const cors = require('cors');
 const multer = require('multer');
 const itemRoutes = require('./routes/itemRoutes');
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 const bookingRoutes = require('./routes/bookingRoutes');
 const guideRoutes = require('./routes/guideRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/guides', guideRoutes);

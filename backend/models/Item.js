@@ -40,6 +40,11 @@ const itemSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+    likedBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
   imageUrl: {
     type: String,
     default: ''

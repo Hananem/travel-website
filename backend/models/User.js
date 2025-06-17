@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false  // Most users won't be admins
   },
+  likedItems: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Item',
+    default: []
+  }],
   resetPasswordToken: String,
   resetPasswordExpires: Date
 }, { 

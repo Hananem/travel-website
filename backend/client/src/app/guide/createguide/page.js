@@ -34,6 +34,7 @@ import { Image as ImageIcon, X } from 'lucide-react';
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().min(6, "Phone number must be at least 6 characters"),
   bio: z.string().min(10, "Bio must be at least 10 characters"),
   destinations: z.array(z.string()).min(1, "Select at least one destination"),
@@ -61,6 +62,7 @@ export default function CreateGuidePage() {
     defaultValues: {
       name: "",
       email: "",
+      password: "",
       phone: "",
       bio: "",
       destinations: [],
@@ -106,7 +108,7 @@ export default function CreateGuidePage() {
         if (key === 'image' && value instanceof File) {
           formData.append(key, value);
         } else if (key === 'destinations') {
-         value.forEach(dest => formData.append('destinations[]', dest))
+          value.forEach(dest => formData.append('destinations[]', dest));
         } else if (value !== undefined && value !== null) {
           formData.append(key, value);
         }
@@ -178,7 +180,7 @@ export default function CreateGuidePage() {
                 </div>
 
                 {!imagePreview && (
-                  <div className="flex-1 flex items-center justify-center bg-gray-50 rounded-lg p-4">
+                  <div className="flex- fisico items-center justify-center bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-500 text-center">
                       A high-quality image will make your guide profile more attractive.
                     </p>
@@ -213,6 +215,24 @@ export default function CreateGuidePage() {
                   <FormControl>
                     <Input type="email" placeholder="guide@example.com" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Password */}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Enter password" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Password must be at least 6 characters
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

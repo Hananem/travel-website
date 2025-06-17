@@ -1,8 +1,8 @@
-// app/guides/[id]/page.js
 'use client'
 
 import { useState } from 'react'
 import { useGetGuideByIdQuery } from '@/store/guideSlice'
+import { useSendMessageMutation } from '@/store/messageSlice' // Import message slice
 import {
   Card,
   CardContent,
@@ -14,6 +14,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input' // Add Input for message form
+import { Label } from '@/components/ui/label' // Add Label for form
+import { Alert, AlertDescription } from '@/components/ui/alert' // Add Alert for feedback
 import {
   Star,
   User,
@@ -24,13 +27,18 @@ import {
   Phone,
   CheckCircle,
   XCircle,
+  MessageSquare,
 } from 'lucide-react'
 import { useParams } from 'next/navigation'
 
 export default function GuidePage() {
   const [isContactVisible, setIsContactVisible] = useState(false)
+  const [isMessageFormVisible, setIsMessageFormVisible] = useState(false) // State for message form
+  const [messageContent, setMessageContent] = useState('') // State for message input
+  const [messageStatus, setMessageStatus] = useState(null) // State for success/error feedback
   const { id } = useParams()
   const { data: guideData, isLoading, isError } = useGetGuideByIdQuery(id)
+  const [sendMessage, { isLoading: isSendingMessage }] = useSendMessageMutation() // Hook to send message
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -42,6 +50,22 @@ export default function GuidePage() {
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || ''
+  }
+
+  const handleSendMessage = async () => {
+    if (!messageContent.trim()) {
+      setMessageStatus({ type: 'error', message: 'Message cannot be empty' })
+      return
+    }
+
+    try {
+      await sendMessage({ guideId: id, content: messageContent }).unwrap()
+      setMessageStatus({ type: 'success', message: 'Message sent successfully!' })
+      setMessageContent('')
+      setIsMessageFormVisible(false)
+    } catch (error) {
+      setMessageStatus({ type: 'error', message: 'Failed to send message. Please try again.' })
+    }
   }
 
   if (isLoading) {
@@ -235,6 +259,44 @@ export default function GuidePage() {
                         <p className="font-medium text-gray-900">{guideData.phone}</p>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Message Guide Button */}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => setIsMessageFormVisible(!isMessageFormVisible)}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  {isMessageFormVisible ? 'Hide Message Form' : 'Message Guide'}
+                </Button>
+
+                {/* Message Form */}
+                {isMessageFormVisible && (
+                  <div className="space-y-3 pt-2">
+                    {messageStatus && (
+                      <Alert variant={messageStatus.type === 'error' ? 'destructive' : 'default'}>
+                        <AlertDescription>{messageStatus.message}</AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message</Label>
+                      <Input
+                        id="message"
+                        value={messageContent}
+                        onChange={(e) => setMessageContent(e.target.value)}
+                        placeholder="Type your message here..."
+                        disabled={isSendingMessage}
+                      />
+                    </div>
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={handleSendMessage}
+                      disabled={isSendingMessage}
+                    >
+                      {isSendingMessage ? 'Sending...' : 'Send Message'}
+                    </Button>
                   </div>
                 )}
               </CardContent>

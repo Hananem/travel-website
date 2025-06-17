@@ -1,53 +1,29 @@
-// models/Guide.js
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const guideSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true // e.g., "John Doe"
-  },
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    unique: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address']
-  },
-  phone: {
-    type: String,
-    trim: true,
-    default: '' // e.g., "+1234567890"
-  },
-  bio: {
-    type: String,
-    default: '',
-    trim: true // e.g., "Experienced guide specializing in cultural tours"
-  },
-  destinations: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Item', // Reference to the Item model (destinations)
-    required: true
-  }],
-  languages: [{
-    type: String,
-    trim: true // e.g., ["English", "Spanish"]
-  }],
-  experienceYears: {
-    type: Number,
-    default: 0,
-    min: 0 // Years of experience
-  },
-  isAvailable: {
-    type: Boolean,
-    default: true
-  },
-  imageUrl: {
-    type: String,
-    default: '' // Optional profile image
-  }
-}, {
-  timestamps: true
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, trim: true, unique: true, match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'] },
+  password: { type: String, required: true, minlength: 6 },
+  role: { type: String, default: 'guide', enum: ['guide'] },
+  phone: { type: String, trim: true, default: '' },
+  bio: { type: String, default: '', trim: true },
+  destinations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item', required: true }],
+  languages: [{ type: String, trim: true }],
+  experienceYears: { type: Number, default: 0, min: 0 },
+  isAvailable: { type: Boolean, default: true },
+  imageUrl: { type: String, default: '' }
+}, { timestamps: true });
+
+guideSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
+
+guideSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = mongoose.model('Guide', guideSchema);

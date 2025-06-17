@@ -1,4 +1,3 @@
-// controllers/guideController.js
 const Guide = require('../models/Guide');
 const mongoose = require('mongoose');
 
@@ -11,7 +10,6 @@ exports.getGuides = async (req, res) => {
 
     const filter = {};
     if (req.query.destination) {
-      // Validate ObjectId
       if (!mongoose.Types.ObjectId.isValid(req.query.destination)) {
         return res.status(400).json({ message: 'Invalid destination ID' });
       }
@@ -48,6 +46,7 @@ exports.getGuides = async (req, res) => {
       }
     });
   } catch (err) {
+    console.error('Error fetching guides:', err.message);
     res.status(500).json({ message: 'Failed to fetch guides', error: err.message });
   }
 };
@@ -64,6 +63,7 @@ exports.getGuideById = async (req, res) => {
     }
     res.json(guide);
   } catch (err) {
+    console.error('Error fetching guide:', err.message);
     res.status(500).json({ message: 'Error fetching guide', error: err.message });
   }
 };
@@ -77,22 +77,39 @@ exports.createGuide = async (req, res) => {
   try {
     let imageUrl = '';
     if (req.file) {
-      imageUrl = req.file.path; // Cloudinary returns the secure URL in req.file.path
+      imageUrl = req.file.path; // Cloudinary URL
       console.log('Cloudinary image URL:', imageUrl);
     }
 
-    // Validate and process destinations
-    let destinations = req.body.destinations;
-    if (typeof destinations === 'string') {
-      destinations = destinations.split(',').map(id => id.trim());
+    const { name, email, password, destinations, languages, experienceYears, phone, bio, isAvailable } = req.body;
+    if (!name || !email || !password || !destinations) {
+      return res.status(400).json({ message: 'Missing required fields: name, email, password, destinations' });
     }
-    if (!Array.isArray(destinations) || destinations.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+
+    const existingGuide = await Guide.findOne({ email });
+    if (existingGuide) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    let destinationsArray = destinations;
+    if (typeof destinations === 'string') {
+      destinationsArray = destinations.split(',').map(id => id.trim());
+    }
+    if (!Array.isArray(destinationsArray) || destinationsArray.some(id => !mongoose.Types.ObjectId.isValid(id))) {
       return res.status(400).json({ message: 'Invalid destination IDs' });
     }
 
     const guideData = {
-      ...req.body,
-      destinations,
+      name,
+      email,
+      password, // Hashed by Guide.js pre-save hook
+      role: 'guide',
+      destinations: destinationsArray,
+      languages: Array.isArray(languages) ? languages : languages?.split(',').map(lang => lang.trim()) || [],
+      experienceYears: parseInt(experienceYears) || 0,
+      phone: phone || '',
+      bio: bio || '',
+      isAvailable: isAvailable !== undefined ? isAvailable === 'true' : true,
       imageUrl
     };
 
@@ -139,6 +156,7 @@ exports.updateGuide = async (req, res) => {
 
     res.json(updatedGuide);
   } catch (err) {
+    console.error('Error updating guide:', err.message);
     res.status(400).json({ message: 'Failed to update guide', error: err.message });
   }
 };
@@ -155,6 +173,7 @@ exports.deleteGuide = async (req, res) => {
     }
     res.json({ message: 'Guide deleted successfully' });
   } catch (err) {
+    console.error('Error deleting guide:', err.message);
     res.status(500).json({ message: 'Failed to delete guide', error: err.message });
   }
 };

@@ -1,5 +1,7 @@
 const Guide = require('../models/Guide');
+const User = require('../models/User');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 
 // Get all guides with pagination and optional filtering
 exports.getGuides = async (req, res) => {
@@ -68,41 +70,83 @@ exports.getGuideById = async (req, res) => {
   }
 };
 
-// Create a new guide
+// Create a new guide and corresponding user
 exports.createGuide = async (req, res) => {
   console.log('=== CREATE GUIDE DEBUG START ===');
   console.log('req.file:', req.file);
   console.log('req.body:', req.body);
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
+    const { name, email, password, destinations, languages, experienceYears, phone, bio, isAvailable } = req.body;
+
+    // Input validation
+    if (!name || !email || !password || !destinations) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Missing required fields: name, email, password, destinations' });
+    }
+    if (password.length < 6) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
+    // Check for existing user or guide
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() }).session(session);
+    if (existingUser) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Email already exists in users' });
+    }
+
+    const existingGuide = await Guide.findOne({ email: email.toLowerCase().trim() }).session(session);
+    if (existingGuide) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Email already exists in guides' });
+    }
+
+    // Validate destinations
+    let destinationsArray = destinations;
+    if (typeof destinations === 'string') {
+      destinationsArray = destinations.split(',').map(id => id.trim());
+    }
+    if (!Array.isArray(destinationsArray) || destinationsArray.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: 'Invalid destination IDs' });
+    }
+
+    // Handle image upload
     let imageUrl = '';
     if (req.file) {
       imageUrl = req.file.path; // Cloudinary URL
       console.log('Cloudinary image URL:', imageUrl);
     }
 
-    const { name, email, password, destinations, languages, experienceYears, phone, bio, isAvailable } = req.body;
-    if (!name || !email || !password || !destinations) {
-      return res.status(400).json({ message: 'Missing required fields: name, email, password, destinations' });
-    }
+    // Create user
+    const userData = {
+      username: name.trim(), // Use guide's name as username
+      email: email.toLowerCase().trim(),
+      password, // Hashed by User pre-save hook
+      role: 'guide',
+    };
+    const user = new User(userData);
+    const savedUser = await user.save({ session });
 
-    const existingGuide = await Guide.findOne({ email });
-    if (existingGuide) {
-      return res.status(400).json({ message: 'Email already exists' });
-    }
-
-    let destinationsArray = destinations;
-    if (typeof destinations === 'string') {
-      destinationsArray = destinations.split(',').map(id => id.trim());
-    }
-    if (!Array.isArray(destinationsArray) || destinationsArray.some(id => !mongoose.Types.ObjectId.isValid(id))) {
-      return res.status(400).json({ message: 'Invalid destination IDs' });
-    }
-
+    // Create guide
     const guideData = {
-      name,
-      email,
-      password, // Hashed by Guide.js pre-save hook
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password, // Hashed by Guide pre-save hook (assumed)
       role: 'guide',
       destinations: destinationsArray,
       languages: Array.isArray(languages) ? languages : languages?.split(',').map(lang => lang.trim()) || [],
@@ -110,17 +154,38 @@ exports.createGuide = async (req, res) => {
       phone: phone || '',
       bio: bio || '',
       isAvailable: isAvailable !== undefined ? isAvailable === 'true' : true,
-      imageUrl
+      imageUrl,
+      user: savedUser._id, // Link guide to user
     };
-
     const guide = new Guide(guideData);
-    const savedGuide = await guide.save();
+    const savedGuide = await guide.save({ session });
     await savedGuide.populate('destinations', 'name destination');
-    res.status(201).json(savedGuide);
+
+    // Generate JWT
+    const token = jwt.sign({ id: savedUser._id, role: savedUser.role }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      message: 'Guide and user registered successfully',
+      guide: savedGuide,
+      token,
+      user: {
+        id: savedUser._id,
+        username: savedUser.username,
+        email: savedUser.email,
+        role: savedUser.role,
+      },
+    });
   } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('=== ERROR DETAILS ===');
     console.error('Error message:', err.message);
-    res.status(400).json({ message: 'Failed to create guide', error: err.message });
+    res.status(400).json({ message: 'Failed to create guide and user', error: err.message });
   }
 };
 

@@ -26,6 +26,9 @@ export const authSlice = createApi({
       transformResponse: (response) => {
         if (response.token) {
           localStorage.setItem('token', response.token);
+          if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
         }
         return response;
       }
@@ -40,6 +43,9 @@ export const authSlice = createApi({
       transformResponse: (response) => {
         if (response.token) {
           localStorage.setItem('token', response.token);
+          if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+          }
         }
         return response;
       }
@@ -57,6 +63,7 @@ export const authSlice = createApi({
       }),
       transformResponse: (response) => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user'); // Clear user on logout
         return response;
       },
       invalidatesTags: ['Auth'],

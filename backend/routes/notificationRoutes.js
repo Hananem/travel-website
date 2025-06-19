@@ -8,3 +8,4 @@ const express = require('express');
   router.delete('/:id', protect, deleteNotification);
 
   module.exports = router;
+  

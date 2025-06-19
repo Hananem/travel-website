@@ -179,9 +179,19 @@ export default function ItemsList() {
   return (
     <div className="">
       <div
-        className="relative min-h-screen bg-cover bg-center"
-        style={{ backgroundImage: "url('/bg.png')" }}
+        className="relative min-h-screen "
+        
       >
+          <video
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="absolute w-full h-full object-cover"
+  >
+    <source src="/hero.mp4" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
         <section className="h-screen flex items-center justify-center text-white text-center bg-black/40 backdrop-brightness-50">
           <div>
             <h1 className="text-5xl md:text-6xl font-extrabold drop-shadow-md">
@@ -198,11 +208,11 @@ export default function ItemsList() {
           </div>
         </section>
 
-        <Component />
-        <CountrySliderWithText />
+       
       </div>
+       <Component />
+        <CountrySliderWithText />
       <Categories />
-      <CreateCategory />
       {/* Filter Section */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <div className="flex justify-between items-center mb-4">

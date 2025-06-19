@@ -5,7 +5,8 @@ import { authSlice } from './authSlice';
 import { bookingSlice } from './bookingSlice';
 import { guideSlice } from './guideSlice';
 import { categorySlice } from './categorySlice';
-import { messageSlice } from './messageSlice'; // Add message slice
+import { messageSlice } from './messageSlice';
+import { notificationSlice } from './notificationSlice'; // Import the notification slice
 
 export const store = configureStore({
   reducer: {
@@ -14,7 +15,8 @@ export const store = configureStore({
     [bookingSlice.reducerPath]: bookingSlice.reducer,
     [guideSlice.reducerPath]: guideSlice.reducer,
     [categorySlice.reducerPath]: categorySlice.reducer,
-    [messageSlice.reducerPath]: messageSlice.reducer, // Add message reducer
+    [messageSlice.reducerPath]: messageSlice.reducer,
+    [notificationSlice.reducerPath]: notificationSlice.reducer, // Add notification reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -23,7 +25,8 @@ export const store = configureStore({
       bookingSlice.middleware,
       guideSlice.middleware,
       categorySlice.middleware,
-      messageSlice.middleware // Add message middleware
+      messageSlice.middleware,
+      notificationSlice.middleware // Add notification middleware
     ),
 });
 

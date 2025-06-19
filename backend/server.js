@@ -11,6 +11,7 @@ const userRoutes = require('./routes/userRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const guideRoutes = require('./routes/guideRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const messageRoutes = require('./routes/messageRoutes'); // Add message routes
 
 
@@ -36,6 +37,7 @@ app.use('/api/items', itemRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/guides', guideRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/notification', notificationRoutes);
 app.use('/api/messages', messageRoutes); // Add message routes
 
 // Multer error handling middleware

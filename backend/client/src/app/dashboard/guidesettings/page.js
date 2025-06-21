@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -15,12 +14,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { X, Image as ImageIcon } from 'lucide-react';
+import { X, Image as ImageIcon, Plus } from 'lucide-react';
 
 export default function GuideSettings() {
   const { data, isLoading, error, refetch } = useGetGuidesQuery({ page: 1, limit: 100 });
   const [updateGuide] = useUpdateGuideMutation();
   const [deleteGuide] = useDeleteGuideMutation();
+
+  // State for create modal
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // State for update modal
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
@@ -42,6 +44,11 @@ export default function GuideSettings() {
   // State for delete confirmation
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [guideToDelete, setGuideToDelete] = useState(null);
+
+  const handleCreateGuideSuccess = () => {
+    setCreateModalOpen(false);
+    refetch();
+  };
 
   const handleUpdateClick = (guide) => {
     setSelectedGuide(guide);
@@ -164,10 +171,16 @@ export default function GuideSettings() {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold text-center">Guide Settings</h1>
-
-      {/* Create Guide Section */}
-      <CreateGuide />
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Guide Settings</h1>
+        <Button 
+          onClick={() => setCreateModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add New Guide
+        </Button>
+      </div>
 
       {/* Guide List */}
       {guidesArray.length > 0 ? (
@@ -217,14 +230,59 @@ export default function GuideSettings() {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500">No guides found</p>
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No guides found</p>
+          <Button 
+            onClick={() => setCreateModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 mx-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Create Your First Guide
+          </Button>
+        </div>
+      )}
+
+      {/* Create Guide Modal */}
+      {createModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-lg">
+              <h2 className="text-xl font-bold">Create New Guide</h2>
+              <Button
+                onClick={() => setCreateModalOpen(false)}
+                variant="ghost"
+                size="sm"
+                className="p-2"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-6">
+              <CreateGuide 
+                onSuccess={handleCreateGuideSuccess}
+                onCancel={() => setCreateModalOpen(false)}
+                isModal={true}
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Update Modal */}
       {updateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Update Guide</h2>
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Update Guide</h2>
+              <Button
+                onClick={() => setUpdateModalOpen(false)}
+                variant="ghost"
+                size="sm"
+                className="p-2"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <form onSubmit={handleUpdateSubmit} className="space-y-4" encType="multipart/form-data">
               <div className="space-y-2">
                 <Label htmlFor="image">Profile Image</Label>
@@ -351,7 +409,7 @@ export default function GuideSettings() {
                   <Label htmlFor="isAvailable">Currently available</Label>
                 </div>
               </div>
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4 pt-4">
                 <Button
                   type="button"
                   onClick={() => setUpdateModalOpen(false)}
@@ -371,7 +429,17 @@ export default function GuideSettings() {
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Confirm Delete</h2>
+              <Button
+                onClick={() => setDeleteModalOpen(false)}
+                variant="ghost"
+                size="sm"
+                className="p-2"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             <p className="mb-6">Are you sure you want to delete "{guideToDelete?.name}"?</p>
             <div className="flex justify-end space-x-4">
               <Button

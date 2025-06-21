@@ -214,147 +214,7 @@ export default function ItemsList() {
         <CountrySliderWithText />
       <Categories />
       {/* Filter Section */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Filters</h2>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setUseAdvancedFilters(!useAdvancedFilters)}
-              className="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
-            >
-              {useAdvancedFilters ? 'Basic Filters' : 'Advanced Filters'}
-            </button>
-            <button
-              onClick={handleResetFilters}
-              className="px-3 py-1 text-sm bg-gray-200 rounded-md hover:bg-gray-300"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Category</label>
-            <input
-              type="text"
-              name="category"
-              value={filters.category}
-              onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder="Tour, Gear, etc."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Destination</label>
-            <input
-              type="text"
-              name="destination"
-              value={filters.destination}
-              onChange={handleFilterChange}
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder="Country or city"
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              name="isAvailable"
-              checked={filters.isAvailable || false}
-              onChange={(e) => setFilters(prev => ({
-                ...prev,
-                isAvailable: e.target.checked ? true : undefined
-              }))}
-              className="h-5 w-5"
-            />
-            <label>Available Only</label>
-          </div>
-        </div>
-
-        {useAdvancedFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Min Price</label>
-              <input
-                type="number"
-                name="minPrice"
-                value={filters.minPrice}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="$0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Max Price</label>
-              <input
-                type="number"
-                name="maxPrice"
-                value={filters.maxPrice}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="$1000.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Min Duration (days)</label>
-              <input
-                type="number"
-                name="minDuration"
-                value={filters.minDuration}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="1"
-                min="1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Max Duration (days)</label>
-              <input
-                type="number"
-                name="maxDuration"
-                value={filters.maxDuration}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="30"
-                min="1"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Search</label>
-              <input
-                type="text"
-                name="search"
-                value={filters.search}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="Search by name or description"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Sort By</label>
-              <select
-                name="sortBy"
-                value={filters.sortBy}
-                onChange={handleFilterChange}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="createdAt:desc">Newest First</option>
-                <option value="createdAt:asc">Oldest First</option>
-                <option value="price:asc">Price: Low to High</option>
-                <option value="price:desc">Price: High to Low</option>
-                <option value="duration:asc">Duration: Short to Long</option>
-                <option value="duration:desc">Duration: Long to Short</option>
-                <option value="name:asc">Name: A-Z</option>
-                <option value="name:desc">Name: Z-A</option>
-              </select>
-            </div>
-          </div>
-        )}
-      </div>
+   
 
       {/* Results and Pagination */}
       <div className="flex justify-between items-center mb-4">
@@ -574,106 +434,96 @@ export default function ItemsList() {
       )}
 
       {/* Items List */}
-      {itemsArray.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {itemsArray.map((item) => (
-            <Card key={item._id} className="group overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white">
-              <div className="relative overflow-hidden">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      e.target.src = '/path/to/fallback-image.jpg';
-                      e.target.onerror = null;
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <div className="text-center">
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-sm text-gray-500">No image</p>
+       {itemsArray.length > 0 ? (
+        <div className="flex justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-fit">
+            {itemsArray.map((item) => (
+              <Card
+                key={item._id}
+                className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-all duration-200 bg-white m-0"
+                style={{ width: '280px' }}
+              >
+                <div className="relative m-0">
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="w-full h-36 object-cover m-0"
+                      onError={(e) => {
+                        e.target.src = '/path/to/fallback-image.jpg';
+                        e.target.onerror = null;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-36 bg-gray-100 flex items-center justify-center m-0">
+                      <span className="text-gray-400 text-xs">No image</span>
                     </div>
-                  </div>
-                )}
-                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1">
-                  <span className={`text-sm font-semibold ${item.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                    {item.isAvailable ? 'Available' : 'Unavailable'}
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 bg-sky-500 text-white px-4 py-2 rounded-full font-bold text-lg">
-                  ${item.price.toFixed(2)}
-                </div>
-              </div>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xl font-bold text-gray-900">{item.name}</h3>
-                  <div className="flex items-center space-x-1 text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm">{item.duration} days</span>
+                  )}
+                  <div className="absolute top-2 right-2 bg-white/80 rounded-full px-2 py-1 text-xs font-medium">
+                    <span className={item.isAvailable ? 'text-green-500' : 'text-red-500'}>
+                      {item.isAvailable ? 'Available' : 'Sold Out'}
+                    </span>
                   </div>
                 </div>
-                <p className="text-gray-600 mb-4 leading-relaxed line-clamp-2">
-                  {item.description}
-                </p>
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">Details:</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
+                <CardContent className="p-3 pt-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="text-md font-semibold text-gray-900 truncate">{item.name}</h3>
+                    <span className="text-sky-600 font-bold text-sm">${item.price.toFixed(2)}</span>
+                  </div>
+                  <p className="text-gray-500 text-xs line-clamp-1 mb-1">{item.description}</p>
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    <span className="bg-sky-100 text-sky-700 text-xs px-1.5 py-0.5 rounded">
                       {item.destination}
                     </span>
-                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
+                    <span className="bg-sky-100 text-sky-700 text-xs px-1.5 py-0.5 rounded">
                       {item.availableSpots} spots
                     </span>
-                    <span className="bg-sky-100 text-sky-700 text-xs px-2 py-1 rounded-full">
-                      {item.category?.name || item.category || 'N/A'}
-                    </span>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1 text-gray-500">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm">ID: {item._id.slice(-6)}</span>
+                  <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{item.duration} days</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <span>ID: {item._id.slice(-6)}</span>
+                    </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <Button 
+                  <div className="flex gap-1">
+                    <Button
+                      onClick={() => handleBookingClick(item)}
+                      className="flex-1 bg-sky-500 text-white hover:bg-sky-600 text-xs py-1"
+                      disabled={!item.isAvailable}
+                    >
+                      Book
+                    </Button>
+                    <Button
                       onClick={() => handleUpdateClick(item)}
                       variant="outline"
-                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-xs py-1 px-2"
                     >
-                      Update
+                      Edit
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => handleDeleteClick(item)}
                       variant="outline"
-                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white text-xs py-1 px-2"
                     >
                       Delete
                     </Button>
-                    <Button 
-                      onClick={() => handleBookingClick(item)}
-                      variant="outline"
-                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
-                      disabled={!item.isAvailable}
-                    >
-                      Book Now
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="text-center py-12 border rounded-lg bg-white shadow-sm">
-          <p className="text-gray-500 text-lg mb-4">No items found matching your filters</p>
-          <Button 
+        <div className="text-center py-8 border rounded-lg bg-white shadow-sm">
+          <p className="text-gray-500 mb-3">No items found</p>
+          <Button
             onClick={handleResetFilters}
             variant="outline"
-            className="px-8 py-3 text-lg border-sky-500 text-sky-500 hover:bg-sky-500 hover:text-white"
+            className="border-sky-500 text-sky-500 hover:bg-sky-500 hover:text-white text-sm px-6 py-2"
           >
             Reset Filters
           </Button>

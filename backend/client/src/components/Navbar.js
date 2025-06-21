@@ -74,10 +74,22 @@ export default function Navbar() {
           </div>
 
           <button
-            onClick={() => router.push('/createitem')}
+            onClick={() => router.push('/guides')}
             className="hover:underline hidden md:inline-block"
           >
-            Create Item
+            Guides
+          </button>
+          <button
+            onClick={() => router.push('/destinations')}
+            className="hover:underline hidden md:inline-block"
+          >
+            Destinations
+          </button>
+          <button
+            onClick={() => router.push('/about')}
+            className="hover:underline hidden md:inline-block"
+          >
+            About
           </button>
           {!isHome && (
             <button
@@ -92,4 +104,3 @@ export default function Navbar() {
     </nav>
   );
 }
- 
